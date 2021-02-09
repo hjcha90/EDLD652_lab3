@@ -53,7 +53,7 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
-```
+
 ## Draft Plots
 ```{r plot1}
 
@@ -73,4 +73,57 @@ plot1
 ```{r plot2}
 
 ```
+
+
+```{r plot5}
+#load region dataframe
+reg_div <- import(here("data", "state_reg_div.xlsx"))
+
+hprodregion <- hprod
+
+hprodregion <- hprodregion %>%   
+  rename("State Code" = "state") %>% 
+    left_join(reg_div, by = "State Code") 
+
+#join dfs by statecode 
+plot_5 <- hprodregion %>% 
+  aggregate(totalprod~Region + year, data = ., mean) %>% 
+    ggplot(aes(year, Region)) +
+      geom_tile(aes(fill = totalprod)) +
+      coord_fixed() +
+      scale_fill_distiller(palette = "Blues") +
+      labs(title = "Average Honey Production Across Years by Region",
+      x = "Year")
+      
+plot_5
+```
+
+```{r plot6}
+#colorblind package
+devtools::install_github("wilkelab/cowplot")
+install.packages("colorspace", repos = "http://R-Forge.R-project.org")
+devtools::install_github("clauswilke/colorblindr")
+#install.packages("albersusa")
+remotes::install_github("hrbrmstr/albersusa")
+library(albersusa)
+
+
+
+us <- usa_sf() %>% 
+  rename("State Code" = "iso_3166_2") %>%
+   left_join(hprodregion, by = "State Code")
+
+#show totalprod as a ratio of population census, higher ratio indicates more honey production in relation to population 
+ggplot(us) +
+  geom_sf(aes(fill = prodvalue),na.rm = T) +
+    facet_wrap(~year) +
+    theme_void() +
+    scale_fill_distiller(palette = "Blues",
+                         name = "Honey Value") +
+    labs(title = "Value of Honey per State Across Years")
+
+
+```
+
+
 
