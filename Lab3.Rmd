@@ -100,20 +100,20 @@ plot_5
 
 ```{r plot6}
 #colorblind package
-devtools::install_github("wilkelab/cowplot")
-install.packages("colorspace", repos = "http://R-Forge.R-project.org")
-devtools::install_github("clauswilke/colorblindr")
+#devtools::install_github("wilkelab/cowplot")
+#install.packages("colorspace", repos = "http://R-Forge.R-project.org")
+#devtools::install_github("clauswilke/colorblindr")
+
 #install.packages("albersusa")
 remotes::install_github("hrbrmstr/albersusa")
 library(albersusa)
 
-
-
+#map data
 us <- usa_sf() %>% 
   rename("State Code" = "iso_3166_2") %>%
    left_join(hprodregion, by = "State Code")
 
-#show totalprod as a ratio of population census, higher ratio indicates more honey production in relation to population 
+#plot value of hones by states acorss years
 ggplot(us) +
   geom_sf(aes(fill = prodvalue),na.rm = T) +
     facet_wrap(~year) +
