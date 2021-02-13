@@ -1,0 +1,120 @@
+---
+title: "HW1"
+author: "Hyeonjin Cha"
+date: "2/4/2021"
+output: html_document
+---
+<style type="text/css">
+  body{
+  font-family: calibri;
+  font-size: 12pt;
+}
+</style>
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.width=5.5, fig.height=9) 
+#load packges
+library(tidyverse)
+library(here)
+library(rio)
+library(janitor)
+#install.packages("magrittr")
+library(magrittr)
+```
+
+## Data Wrangling
+
+```{r data}
+#load datasets
+assessments <- import(here("assessments.csv")) %>%
+  clean_names()
+
+courses <- import(here("courses.csv")) %>%
+  clean_names()
+
+studentassessment <- import(here("studentAssessment.csv")) %>%
+  clean_names()
+
+studentinfo <- import(here("studentInfo.csv")) %>%
+  clean_names()
+
+studentregistration <- import(here("studentRegistration.csv")) %>%
+  clean_names()
+
+studentVle <- import(here("studentVle.csv")) %>%
+  clean_names()
+
+vle <- import(here("vle.csv")) %>%
+  clean_names()
+
+#lets look at the plot and come up with the gameplan...
+#x : average score, from studentassessment
+#y : highest education, from studentinfo
+#color : gender, from studentinfo
+#facet~wrap: final_result, from studentinfo
+#assessment type: TMA, from assessments
+#merge studentassessment, studentinfo, assessments
+#studentassement & assessments : join by id_assessment
+#studentinfo & assessments : join by id_student
+
+
+data_join <- assessments %>%
+  left_join(studentassessment, by = "id_assessment") %>%
+  left_join(studentinfo, by = "id_student") %>%
+  filter(assessment_type == "TMA") %>%
+  select(id_student, id_assessment, gender, highest_education, final_result, assessment_type, score)
+#Why are there duplicate values?
+
+
+data_join2 <- assessments %>%
+  left_join(studentassessment, by = "id_assessment") %>%
+  left_join(studentinfo, by = "id_student") %>%
+  filter(assessment_type == "TMA") %>%
+  select(id_student, id_assessment, gender, highest_education, final_result, assessment_type, score) %>%
+  unite(id, id_student:id_assessment) %>%
+  distinct(id, .keep_all = TRUE)
+#compute average scores by highest education, gender, final results
+
+
+data_join_avg <- data_join2 %>%
+  group_by(highest_education, gender, final_result) %>%
+  summarize(avg = mean(score)) #NAs?
+data_join_avg
+
+
+data_join_aggregate <- data_join2 %>%
+  aggregate(score ~ highest_education + gender + final_result, data = ., mean)
+#why does this one work instead? the values that do turn up on the data above are the same...
+data_join_aggregate
+```
+
+## Plotting
+
+``` {r plot}
+plot <- data_join_aggregate %>%
+  mutate(highest_education = forcats::fct_reorder(highest_education, score)) %>%
+  mutate(final_result = factor(final_result, levels=c("Fail", "Withdrawn", "Pass", "Distinction"))) %>%
+  ggplot(aes(highest_education, score)) +
+  coord_flip() +
+  geom_line(size = 3, color = "gray30") +
+  geom_point(aes(color = gender), size = 5) +
+  facet_wrap(~final_result, nrow = 4) +
+  scale_color_manual(values = c("lightskyblue1", "dodgerblue3"),
+                    name = "Gender",
+                    guide = guide_legend(reverse = FALSE)) +
+  # scale_color_brewer(palette = "PuBu") +
+  labs(title = "Average TMA Scores",
+       subtitle = "Results displayed by Education, gender, and Final Result Designation",
+       x = "Highest Education",
+       y = "Average Score",
+       caption = "Data from Kuzilek, Hlosta, & Zdarahal (2017).
+       https://analyse.kmi.open.ac.uk/open_dataset",
+       color = "Gender") +
+  theme_minimal() +
+  theme(panel.grid.major.x = element_line(size = 0.75),
+        panel.grid.minor.x = element_line(size = 0.25))
+plot
+
+
+```

@@ -1,0 +1,32 @@
+{
+    "id": "3CC57CA3",
+    "path": null,
+    "project_path": null,
+    "type": "r_dataframe",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1613022483621.0,
+    "source_on_save": false,
+    "relative_order": 4,
+    "properties": {
+        "expression": "hprod_join",
+        "caption": "hprod_join",
+        "totalObservations": "626",
+        "displayedObservations": "626",
+        "variables": "10",
+        "cacheKey": "E2498AB6",
+        "object": "hprod_join",
+        "environment": "",
+        "contentUrl": "grid_resource/gridviewer.html?env=&obj=hprod_join&cache_key=E2498AB6&max_cols=50",
+        "preview": "0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 8242834617063862895,
+    "encoding": "",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1613022483621,
+    "read_only": false,
+    "read_only_alternatives": []
+}

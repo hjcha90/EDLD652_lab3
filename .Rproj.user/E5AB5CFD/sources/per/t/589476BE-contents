@@ -1,0 +1,226 @@
+---
+title: "HW1_resubmit"
+author: "Hyeonjin Cha"
+date: "2/10/2021"
+output: html_document
+---
+
+```{css}
+body{
+  font-family: calibri;
+  font-size: 12pt;
+}
+```
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE) 
+#load packges
+library(tidyverse)
+library(here)
+library(rio)
+library(janitor)
+
+```
+
+## Open Ended Component
+
+```{r open-ended}
+#load datasets
+assessments <- import(here("assessments.csv")) %>%
+  clean_names()
+
+courses <- import(here("courses.csv")) %>%
+  clean_names()
+
+studentassessment <- import(here("studentAssessment.csv")) %>%
+  clean_names()
+
+studentinfo <- import(here("studentInfo.csv")) %>%
+  clean_names()
+
+studentregistration <- import(here("studentRegistration.csv")) %>%
+  clean_names()
+
+studentVle <- import(here("studentVle.csv")) %>%
+  clean_names()
+
+vle <- import(here("vle.csv")) %>%
+  clean_names()
+
+
+#Plot 1: Average score by module and assessment type
+d1 <- left_join(studentassessment, assessments, by = "id_assessment") %>%
+  select(code_module, id_student, id_assessment, assessment_type, score)
+
+plot1 <- d1 %>%
+  group_by(code_module, assessment_type) %>%
+  summarize(avg = mean(score, na.rm = TRUE)) %>%
+  ggplot(aes(code_module, avg)) +
+  geom_col() +
+  facet_wrap(~assessment_type) +
+  theme_minimal()
+plot1
+
+#Plot 2: Average score by poverty index
+d2 <- left_join(studentinfo, studentassessment, by = "id_student") %>%
+  unite("id", c("id_student","id_assessment")) %>%
+  distinct(id, .keep_all = TRUE)
+
+plot2 <- d2 %>%
+  group_by(imd_band) %>%
+  summarize(avg = mean(score, na.rm = TRUE)) %>%
+  ggplot(aes(imd_band, avg)) +
+  geom_col() +
+  theme_minimal()
+plot2
+
+
+#Plot 3: number of students by education level
+d3 <- studentinfo %>%
+  distinct(id_student, .keep_all = TRUE)
+
+plot3 <- d3 %>%
+  mutate(highest_education = factor(highest_education,
+                                    levels=c("No Formal quals",
+                                               "Lower Than A Level",
+                                                                "A Level or Equivalent",
+                                                                "HE Qualification",
+                                                                "Post Graduate Qualification"
+                                                               ))) %>%
+  ggplot(aes(highest_education)) +
+  geom_bar() +
+  coord_flip() +
+  theme_minimal()
+plot3
+
+
+
+
+```
+
+
+#Final assignment: reproduce that plot
+
+```{r plot-reproduction, fig.width = 6, fig.height = 9}
+#lets look at the plot and come up with the gameplan...
+#x : average score, from studentassessment
+#y : highest education, from studentinfo
+#color : gender, from studentinfo
+#facet~wrap: final_result, from studentinfo
+#assessment type: TMA, from assessments
+#merge studentassessment, studentinfo, assessments
+#studentassement & assessments : join by id_assessment
+#studentinfo & assessments : join by id_student
+#from DA: what uniquely defines each dataset?
+
+df_a <- assessments %>%
+  left_join(studentassessment, by = "id_assessment")
+#this is fine
+
+# #what uniquely identifies studentinfo dataset?
+# studentinfo %>%
+#   count(id_student) %>%
+#   filter(n > 1)
+# 
+# studentinfo %>%
+#   count(id_student, code_module) %>%
+#   filter(n > 1)
+# 
+# studentinfo %>%
+#   count(id_student, code_presentation) %>%
+#   filter(n > 1)
+# 
+# studentinfo %>%
+#   count(id_student, code_presentation, code_module) %>%
+#   filter(n > 1)
+
+#id_student, code_presentation, code_module
+#how to join studentinfo with
+
+# studentregistration %>%
+#   count(id_student, code_presentation, code_module) %>%
+#   filter(n > 1)
+
+df_b <- df_a %>%
+  left_join(studentregistration, by = c("id_student", "code_module", "code_presentation"))
+
+df_c <- df_b %>%
+  left_join(studentinfo, by = c("id_student", "code_module", "code_presentation"))
+
+# df_c %>%
+#   count(id_student, code_presentation, code_module) %>%
+#   filter(n > 1)
+
+df_final <- df_c %>%
+  filter(assessment_type == "TMA") %>%
+  group_by(highest_education, gender, final_result) %>%
+  summarize(avg = mean(score, na.rm = TRUE))
+
+plot <- df_final %>%
+  mutate(highest_education = factor(highest_education, levels = c("No Formal quals",
+                                                                  "Lower Than A Level",
+                                                                  "A Level or Equivalent",
+                                                                  "HE Qualification",
+                                                                  "Post Graduate Qualification"))) %>%
+  mutate(final_result = factor(final_result, levels=c("Fail", "Withdrawn", "Pass", "Distinction"))) %>%
+  ggplot(aes(highest_education, avg)) +
+  coord_flip() +
+  geom_line(size = 3, color = "gray30") +
+  geom_point(aes(color = gender), size = 5) +
+  facet_wrap(~final_result, nrow = 4) +
+  scale_color_manual(values = c("lightskyblue1", "dodgerblue3"),
+                    name = "Gender",
+                    guide = guide_legend(reverse = FALSE)) +
+  # scale_color_brewer(palette = "PuBu") +
+  labs(title = "Average TMA Scores",
+       subtitle = "Results displayed by Education, gender, and Final Result Designation",
+       x = "Highest Education",
+       y = "Average Score",
+       caption = "Data from Kuzilek, Hlosta, & Zdarahal (2017).
+       https://analyse.kmi.open.ac.uk/open_dataset",
+       color = "Gender") +
+  theme_minimal() +
+  theme(panel.grid.major.x = element_line(size = 1),
+        panel.grid.minor.x = element_line(size = 0.25))
+plot
+```
+
+
+```{r filtering_join}
+
+#filtering join to calculate average TMA scores by final result and gender
+#....but only for those in Scotland!
+fj_a <- studentinfo %>%
+  filter(region == "Scotland")
+
+fj_b <- df_c %>%
+  semi_join(fj_a)
+
+fj_final <- fj_b %>%
+  filter(assessment_type == "TMA") %>%
+  group_by(final_result, gender) %>%
+  summarize(avg = mean(score, na.rm = TRUE))
+
+plot_fj <- fj_final %>%
+  mutate(final_result = factor(final_result, levels=c("Fail", "Withdrawn", "Pass", "Distinction"))) %>%
+  ggplot(aes(final_result, avg)) +
+  coord_flip() +
+  geom_line(size = 3, color = "gray30") +
+  geom_point(aes(color = gender), size = 5) +
+  scale_color_manual(values = c("lightskyblue1", "dodgerblue3"),
+                     name = "Gender",
+                     guide = guide_legend(reverse = FALSE)) +
+  # scale_color_brewer(palette = "PuBu") +
+  labs(title = "Average TMA Scores in Scotland",
+       subtitle = "Results displayed by Final Resut Designation and Gender",
+       x = "Final Resut",
+       y = "Average Score",
+       caption = "Data from Kuzilek, Hlosta, & Zdarahal (2017).
+       https://analyse.kmi.open.ac.uk/open_dataset",
+       color = "Gender") +
+  theme_minimal() +
+  theme(panel.grid.major.x = element_line(size = 1),
+        panel.grid.minor.x = element_line(size = 0.25))
+plot_fj
+
