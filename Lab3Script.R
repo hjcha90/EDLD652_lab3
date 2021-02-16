@@ -43,13 +43,15 @@ plot1 <- hprod %>%
   
 plot1 
 
-#plot2 is VERY hard to read; do not recommend using
-plot2 <- hprod %>% 
+#plot1 alternative
+plot1b <- hprod %>% 
   mutate(production=totalprod/10000) %>%
   ggplot(aes(year, production)) +
-  geom_line(aes(color = state))
-plot2
-
+  geom_line(aes(color = state), size = 2) +
+  gghighlight(state == "CA" |state == "WA" | state =="OR") +
+  scale_x_continuous(expand = c(0, 0)) +
+  theme_minimal()
+plot1b
 
 
 

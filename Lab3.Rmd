@@ -67,6 +67,16 @@ plot1 <- hprod %>%
   theme(axis.text.y = element_text(color = label_color,
                                   face = label_face))
 plot1 
+
+#plot1 alternative
+plot1b <- hprod %>% 
+  mutate(production=totalprod/10000) %>%
+  ggplot(aes(year, production)) +
+  geom_line(aes(color = state), size = 2) +
+  gghighlight(state == "CA" |state == "WA" | state =="OR") +
+  scale_x_continuous(expand = c(0, 0)) +
+  theme_minimal()
+plot1b
 ```
 
 ```{r plot2}
