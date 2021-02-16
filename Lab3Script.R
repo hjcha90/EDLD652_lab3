@@ -11,7 +11,7 @@ library(lubridate)
 library(gghighlight)
 library(ggtext)
 library(albersusa)
-#library(colorblindr)
+
 
 
 hprod <- import(here("data", "honeyproduction.csv")) %>% 
@@ -43,13 +43,20 @@ plot1 <- hprod %>%
   
 plot1 
 
+
+
 #plot1 alternative
 plot1b <- hprod %>% 
   mutate(production=totalprod/10000) %>%
-  ggplot(aes(year, production)) +
-  geom_line(aes(color = state), size = 2) +
-  gghighlight(state == "CA" |state == "WA" | state =="OR") +
+  ggplot(aes(year, production, color = state)) +
+  geom_line(size = 2) +
+  gghighlight(state == "CA" |state == "WA" | state =="OR", unhighlighted_params = list(size = 1)) +
+  scale_color_viridis_c() +
   scale_x_continuous(expand = c(0, 0)) +
+  labs(title = "Total Honey Production by State, from 1998 to 2012",
+       subtitle = "Highlighting the West Coast",
+       x = "Year",
+       y = "Honey Production (in 10,000lbs)") +
   theme_minimal()
 plot1b
 
