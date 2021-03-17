@@ -23,8 +23,8 @@ library(forcats)
 library(lubridate)
 library(gghighlight)
 library(ggtext)
-library(colorblindr)
-
+#library(colorblindr)
+library(colorBlindness)
 ```
 
 ```{r data}
@@ -55,7 +55,6 @@ plot1b <- ggplot(hprod2, aes(year, production)) +
   geom_line(data = hprod2 %>% 
             filter(state == "CA"| state == "OR"|state == "WA"), 
             aes(color=state),size=1) + 
-  scale_color_viridis_d() +
   labs(title = "Total Honey Production by State, from 1998 to 2012",
        subtitle = "Highlighting the West Coast",
        x = "Year",
@@ -65,9 +64,12 @@ plot1b
 ```
 
 ```{r plot2}
-colorblindr::cvd_grid(plot1b)
+colorBlindness::cvdPlot(plot1b)
 ```
 
+```{r plot3}
+plot1b + scale_color_viridis_d()
+```
 
 ```{r plot4}
 #Download the file here denoting the region and division of each state.

@@ -1,6 +1,7 @@
-devtools::install_github("wilkelab/cowplot")
-install.packages("colorspace", repos = "http://R-Forge.R-project.org")
-devtools::install_github("clauswilke/colorblindr")
+#devtools::install_github("wilkelab/cowplot")
+#install.packages("colorspace", repos = "http://R-Forge.R-project.org")
+#devtools::install_github("clauswilke/colorblindr")
+#install.packages("colorBlindness")
 
 library(tidyverse)
 library(here)
@@ -15,6 +16,7 @@ library(gghighlight)
 library(ggtext)
 library(albersusa)
 library(colorblindr)
+library(colorBlindness)
 
 
 hprod <- import(here("data", "honeyproduction.csv")) %>% 
@@ -30,7 +32,6 @@ plot1b <- ggplot(hprod2, aes(year, production)) +
   geom_line(data = hprod2 %>% 
             filter(state == "CA"| state == "OR"|state == "WA"), 
             aes(color=state),size=1) + 
-  scale_color_viridis_d() +
   labs(title = "Total Honey Production by State, from 1998 to 2012",
        subtitle = "Highlighting the West Coast",
        x = "Year",
@@ -39,8 +40,12 @@ plot1b <- ggplot(hprod2, aes(year, production)) +
 plot1b
 
 #plot2
-colorblindr::cvd_grid(plot1b)
+#I couldn't get the colorblindr package to install so Daniel suggested this one
+# as an alternative
+colorBlindness::cvdPlot(plot1b)
 
+#plot3
+plot1b + scale_color_viridis_d()
 
 #Download the file here denoting the region and division of each state.
 hprod <- import(here("data", "honeyproduction.csv")) %>% 
