@@ -131,17 +131,20 @@ hprodregion <- hprod
 
 hprodregion <- hprodregion %>%   
   rename("State Code" = "state") %>% 
-    left_join(reg_div, by = "State Code") 
+    left_join(reg_div, by = "State Code")
+    
 
-#join dfs by statecode 
+#join dfs by statecode aggregate
 plot_5 <- hprodregion %>% 
   aggregate(totalprod~Region + year, data = ., mean) %>% 
-    ggplot(aes(year, Region)) +
+    ggplot(aes(year, fct_reorder(Region,totalprod))) +
       geom_tile(aes(fill = totalprod)) +
       coord_fixed() +
-      scale_fill_distiller(palette = "Blues") +
+      scale_fill_distiller("Average Honey Production \nin lb",palette = "Blues", na.value = "black") +
       labs(title = "Average Honey Production Across Years by Region",
-      x = "Year")
+      x = "Year",
+      y = "Region")  +
+  theme(legend.title = element_text(size = 10))
       
 plot_5
 ```
@@ -162,13 +165,15 @@ us <- usa_sf() %>%
    left_join(hprodregion, by = "State Code")
 
 #plot value of hones by states acorss years
-ggplot(us) +
-  geom_sf(aes(fill = prodvalue),na.rm = T) +
+plot_6<- ggplot(us) +
+  geom_sf(aes(fill = totalprod)) +
     facet_wrap(~year) +
     theme_void() +
     scale_fill_distiller(palette = "Blues",
-                         name = "Honey Value") +
-    labs(title = "Value of Honey per State Across Years")
+                         name = "Honey Production \n(lb)",
+                         na.value = "black") +
+    labs(title = "Honey Produced per State Across Years")
+plot_6
 
 
 ```
